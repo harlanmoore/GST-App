@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#B8922A" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="GST Gold" />
+  <title>GST Gold — Gold & Silver Traders</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --gold:      #B8922A;
+      --gold-lt:   #D4A940;
+      --gold-pale: #FBF6EC;
+      --gold-bg:   #F5EDD8;
+      --ink:       #111009;
+      --text:      #4A4740;
+      --muted:     #9A9590;
+      --border:    #E8E4DC;
+      --white:     #FFFFFF;
+      --bg:        #FAFAF8;
+      --green:     #16A34A;
+      --red:       #DC2626;
+      --radius:    16px;
+      --safe-top:  env(safe-area-inset-top, 0px);
+      --safe-bot:  env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--ink);
+      overflow: hidden;
+    }
+
+    /* ── SHELL ── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: calc(var(--safe-top) + 0.75rem) 1.25rem 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .topbar-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .topbar-logo span { color: var(--gold); }
+
+    .topbar-contact {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #25D366;
+      color: white;
+      text-decoration: none;
+      padding: 0.45rem 0.85rem;
+      border-radius: 50px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    /* ── PRICE BANNER ── */
+    .price-banner {
+      background: var(--gold);
+      padding: 0.85rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .price-main {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .price-label {
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .price-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: white;
+      line-height: 1;
+    }
+
+    .price-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+    }
+
+    .price-change {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: white;
+      background: rgba(255,255,255,0.2);
+      padding: 0.2rem 0.5rem;
+      border-radius: 50px;
+    }
+
+    .price-updated {
+      font-size: 0.6rem;
+      color: rgba(255,255,255,0.6);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .live-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: white;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── TAB BAR ── */
+    .tabs {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.75rem 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-align: center;
+      color: var(--muted);
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* ── SCROLL CONTENT ── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 1.25rem;
+      padding-bottom: calc(var(--safe-bot) + 1.25rem);
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 0.25rem;
+    }
+    .section-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+      font-weight: 300;
+    }
+
+    /* ── SPOT PERCENTAGE CONTROL ── */
+    .pct-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .pct-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+
+    .pct-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .pct-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--gold);
+      height: 4px;
+      cursor: pointer;
+    }
+
+    .pct-hint {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+
+    /* ── WEIGHT INPUT ── */
+    .weight-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .weight-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .weight-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .weight-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--ink);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .weight-input:focus { border-color: var(--gold); }
+
+    .unit-toggle {
+      display: flex;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .unit-btn {
+      padding: 0.7rem 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: none;
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .unit-btn.active { background: var(--gold); color: white; }
+
+    /* ── KARAT GRID ── */
+    .karat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .karat-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .karat-card:active { transform: scale(0.97); }
+    .karat-card.selected { border-color: var(--gold); background: var(--gold-pale); }
+
+    .karat-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.15rem;
+    }
+    .karat-purity {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    /* ── RESULT CARD ── */
+    .result-card {
+      background: var(--ink);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      display: none;
+    }
+    .result-card.visible { display: block; }
+
+    .result-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 1rem;
+    }
+
+    .result-rows { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .result-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .result-row-label { font-size: 0.8rem; color: rgba(255,255,255,0.55); font-weight: 400; }
+    .result-row-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: white;
+    }
+    .result-row-val.gold-val { color: var(--gold-lt); }
+
+    .result-disclaimer {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.3);
+      margin-top: 0.75rem;
+      line-height: 1.5;
+    }
+
+    /* ── COIN / BULLION ITEMS ── */
+    .item-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem; }
+
+    .item-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .item-card:active { background: var(--gold-pale); border-color: var(--gold); }
+
+    .item-left { display: flex; flex-direction: column; gap: 0.2rem; }
+    .item-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.98rem;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .item-detail { font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+
+    .item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; }
+    .item-spot {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .item-buy {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    /* ── CONTACT PANEL ── */
+    .contact-panel { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .contact-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+      color: var(--ink);
+      transition: border-color 0.2s;
+    }
+    .contact-card:active { border-color: var(--gold); }
+
+    .contact-icon {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .contact-icon.wa  { background: #25D366; }
+    .contact-icon.em  { background: var(--gold-pale); }
+    .contact-icon.web { background: var(--bg); border: 1px solid var(--border); }
+
+    .contact-text h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 0.15rem;
+    }
+    .contact-text p { font-size: 0.75rem; color: var(--muted); }
+
+    .about-card {
+      background: var(--gold-pale);
+      border: 1px solid rgba(184,146,42,0.2);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-top: 0.5rem;
+    }
+    .about-card h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 0.4rem;
+    }
+    .about-card p { font-size: 0.78rem; color: var(--text); line-height: 1.65; font-weight: 300; }
+
+    /* ── LOADING STATE ── */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* Panels show/hide */
+    .panel { display: none; }
+    .panel.active { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-logo">Gold <span>&</span> Silver Traders</div>
+    <a href="https://wa.me/14252691221" class="topbar-contact" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.51 5.833L.057 23.215a.75.75 0 00.928.928l5.382-1.453A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.711 9.711 0 01-4.953-1.354l-.355-.211-3.676.993.992-3.588-.232-.37A9.712 9.712 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+      WhatsApp
+    </a>
+  </div>
+
+  <!-- PRICE BANNER -->
+  <div class="price-banner">
+    <div class="price-main">
+      <div class="price-label">Gold Spot Price / oz</div>
+      <div class="price-value" id="spotDisplay">Loading…</div>
+    </div>
+    <div class="price-meta">
+      <div class="price-change" id="changeDisplay">—</div>
+      <div class="price-updated">
+        <span class="live-dot"></span>
+        <span id="updatedTime">Fetching…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('jewelry', this)">💍 Jewelry</button>
+    <button class="tab" onclick="switchTab('coins', this)">🪙 Coins</button>
+    <button class="tab" onclick="switchTab('bullion', this)">🏅 Bullion</button>
+    <button class="tab" onclick="switchTab('contact', this)">📞 Contact</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── JEWELRY PANEL ── -->
+    <div class="panel active" id="panel-jewelry">
+      <p class="section-title">Jewelry Calculator</p>
+      <p class="section-sub">Enter weight, select karat, see your value instantly.</p>
+
+      <!-- Percentage control -->
+      <div class="pct-card">
+        <div class="pct-row">
+          <span class="pct-label">Buying at % of spot</span>
+          <span class="pct-value" id="pctDisplay">90%</span>
+        </div>
+        <input type="range" id="pctSlider" min="50" max="98" value="90" step="1" oninput="updatePct(this.value)" />
+        <div class="pct-hint">Drag to set your offer percentage</div>
+      </div>
+
+      <!-- Weight input -->
+      <div class="weight-card">
+        <div class="weight-row">
+          <div class="weight-input-wrap">
+            <input class="weight-input" type="number" id="weightInput" placeholder="Enter weight" min="0" step="0.01" oninput="calculate()" />
+          </div>
+          <div class="unit-toggle">
+            <button class="unit-btn active" id="btn-dwt" onclick="setUnit('dwt')">dwt</button>
+            <button class="unit-btn" id="btn-g" onclick="setUnit('g')">g</button>
+            <button class="unit-btn" id="btn-oz" onclick="setUnit('oz')">oz</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Karat grid -->
+      <div class="karat-grid" id="karatGrid"></div>
+
+      <!-- Result -->
+      <div class="result-card" id="resultCard">
+        <div class="result-title">Estimated Value</div>
+        <div class="result-rows">
+          <div class="result-row">
+            <span class="result-row-label">Pure gold content</span>
+            <span class="result-row-val" id="res-content">—</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row-label">Melt / spot value</span>
+            <span class="result-row-val" id="res-spot">—</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row-label">Offer at <span id="res-pct-label">90%</span></span>
+            <span class="result-row-val gold-val" id="res-offer">—</span>
+          </div>
+        </div>
+        <div class="result-disclaimer">Estimate based on live spot. Final offer subject to verification. Contact us for a formal quote.</div>
+      </div>
+    </div>
+
+    <!-- ── COINS PANEL ── -->
+    <div class="panel" id="panel-coins">
+      <p class="section-title">Gold Coins</p>
+      <p class="section-sub">Common coins — spot value and our buying price.</p>
+
+      <div class="pct-card">
+        <div class="pct-row">
+          <span class="pct-label">Buying at % of spot</span>
+          <span class="pct-value" id="coinPctDisplay">90%</span>
+        </div>
+        <input type="range" id="coinPctSlider" min="50" max="98" value="90" step="1" oninput="updateCoinPct(this.value)" />
+      </div>
+
+      <div class="item-list" id="coinList">
+        <div class="loading">Loading coin prices…</div>
+      </div>
+    </div>
+
+    <!-- ── BULLION PANEL ── -->
+    <div class="panel" id="panel-bullion">
+      <p class="section-title">Bullion Bars</p>
+      <p class="section-sub">Standard bar sizes — spot value and our buying price.</p>
+
+      <div class="pct-card">
+        <div class="pct-row">
+          <span class="pct-label">Buying at % of spot</span>
+          <span class="pct-value" id="barPctDisplay">90%</span>
+        </div>
+        <input type="range" id="barPctSlider" min="50" max="98" value="90" step="1" oninput="updateBarPct(this.value)" />
+      </div>
+
+      <div class="item-list" id="barList">
+        <div class="loading">Loading bar prices…</div>
+      </div>
+    </div>
+
+    <!-- ── CONTACT PANEL ── -->
+    <div class="panel" id="panel-contact">
+      <p class="section-title">Get in Touch</p>
+      <p class="section-sub">Ready to sell? We respond within one business day.</p>
+
+      <div class="contact-panel">
+        <a href="https://wa.me/14252691221" class="contact-card" target="_blank">
+          <div class="contact-icon wa">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.115.549 4.1 1.51 5.833L.057 23.215a.75.75 0 00.928.928l5.382-1.453A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.711 9.711 0 01-4.953-1.354l-.355-.211-3.676.993.992-3.588-.232-.37A9.712 9.712 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+          </div>
+          <div class="contact-text">
+            <h4>WhatsApp</h4>
+            <p>+1 (425) 269-1221 · Fastest response</p>
+          </div>
+        </a>
+
+        <a href="mailto:harlan@goldsilvertraders.com" class="contact-card">
+          <div class="contact-icon em">✉️</div>
+          <div class="contact-text">
+            <h4>Email</h4>
+            <p>harlan@goldsilvertraders.com</p>
+          </div>
+        </a>
+
+        <a href="https://www.goldsilvertraders.com" class="contact-card" target="_blank">
+          <div class="contact-icon web">🌐</div>
+          <div class="contact-text">
+            <h4>Website</h4>
+            <p>goldsilvertraders.com</p>
+          </div>
+        </a>
+
+        <div class="about-card">
+          <h4>About Gold & Silver Traders</h4>
+          <p>We're direct buyers with 20+ years of experience across three continents — the DRC, the Solomon Islands, and the United States. We buy bulk gold at fair, spot-referenced prices with complete confidentiality.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end .content -->
+</div><!-- end .app -->
+
+<script>
+// ── STATE ──
+let spotPrice   = 0;   // USD per troy oz
+let buyingPct   = 90;
+let coinPct     = 90;
+let barPct      = 90;
+let weightUnit  = 'dwt'; // dwt | g | oz
+let selectedKarat = null;
+
+// ── KARAT DATA ──
+const KARATS = [
+  { k: '24K', purity: 1.0000, label: '99.9%' },
+  { k: '22K', purity: 0.9167, label: '91.6%' },
+  { k: '18K', purity: 0.7500, label: '75.0%' },
+  { k: '14K', purity: 0.5833, label: '58.3%' },
+  { k: '10K', purity: 0.4167, label: '41.6%' },
+  { k: '9K',  purity: 0.3750, label: '37.5%' },
+];
+
+// ── COIN DATA (troy oz gold content) ──
+const COINS = [
+  { name: 'Krugerrand',         detail: 'South Africa · 1 oz',        oz: 1.0000 },
+  { name: 'American Gold Eagle',detail: 'USA · 1 oz',                 oz: 1.0000 },
+  { name: 'Canadian Maple Leaf',detail: 'Canada · 1 oz · 99.99%',     oz: 1.0000 },
+  { name: 'Gold Buffalo',       detail: 'USA · 1 oz · 99.99%',        oz: 1.0000 },
+  { name: 'Gold Britannia',     detail: 'UK · 1 oz · 99.99%',         oz: 1.0000 },
+  { name: 'Austrian Philharmonic', detail: 'Austria · 1 oz',          oz: 1.0000 },
+  { name: 'Gold Sovereign',     detail: 'UK · 0.2354 oz',             oz: 0.2354 },
+  { name: 'American Eagle ½oz', detail: 'USA · ½ oz',                 oz: 0.5000 },
+  { name: 'American Eagle ¼oz', detail: 'USA · ¼ oz',                 oz: 0.2500 },
+  { name: 'American Eagle ⅒oz', detail: 'USA · 1/10 oz',             oz: 0.1000 },
+  { name: 'Pre-1933 US $20',    detail: 'USA · 0.9675 oz',            oz: 0.9675 },
+  { name: 'Pre-1933 US $10',    detail: 'USA · 0.4838 oz',            oz: 0.4838 },
+  { name: 'Chinese Panda 1oz',  detail: 'China · 1 oz · 99.9%',       oz: 1.0000 },
+  { name: 'Australian Kangaroo',detail: 'Australia · 1 oz · 99.99%',  oz: 1.0000 },
+];
+
+// ── BULLION BAR DATA (troy oz) ──
+const BARS = [
+  { name: '1 gram bar',         detail: '99.9% · 0.032 oz',           oz: 0.0322 },
+  { name: '5 gram bar',         detail: '99.9% · 0.161 oz',           oz: 0.1608 },
+  { name: '10 gram bar',        detail: '99.9% · 0.322 oz',           oz: 0.3215 },
+  { name: '1 troy oz bar',      detail: '99.9%',                      oz: 1.0000 },
+  { name: '2 troy oz bar',      detail: '99.9%',                      oz: 2.0000 },
+  { name: '5 troy oz bar',      detail: '99.9%',                      oz: 5.0000 },
+  { name: '10 troy oz bar',     detail: '99.9%',                      oz: 10.000 },
+  { name: '1 oz kilo bar',      detail: '99.9% · 32.15 oz',           oz: 32.150 },
+  { name: '100 oz bar',         detail: '99.9%',                      oz: 100.00 },
+  { name: 'LBMA Good Delivery', detail: '99.5% · ~400 oz',            oz: 400.00 },
+];
+
+// ── UNIT CONVERSIONS to troy oz ──
+function toTroyOz(weight, unit) {
+  if (unit === 'g')   return weight / 31.1035;
+  if (unit === 'dwt') return weight / 20;
+  return weight; // already oz
+}
+
+// ── FORMAT CURRENCY ──
+function fmt(n) {
+  if (n >= 1000) return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return '$' + n.toFixed(2);
+}
+
+// ── FETCH SPOT PRICE ──
+async function fetchSpot() {
+  try {
+    const res  = await fetch('https://freegoldapi.com/data/latest.json');
+    const data = await res.json();
+    const sorted = data.filter(d => d.price > 0).sort((a,b) => a.date.localeCompare(b.date));
+    const latest = sorted[sorted.length - 1];
+    const prev   = sorted[sorted.length - 2];
+
+    spotPrice = latest.price;
+    const chg = prev ? ((spotPrice - prev.price) / prev.price * 100) : 0;
+    const dir = chg >= 0 ? '▲' : '▼';
+
+    document.getElementById('spotDisplay').textContent = fmt(spotPrice);
+    document.getElementById('changeDisplay').textContent = `${dir} ${Math.abs(chg).toFixed(2)}%`;
+    document.getElementById('changeDisplay').style.background = chg >= 0 ? 'rgba(22,163,74,0.3)' : 'rgba(220,38,38,0.3)';
+    document.getElementById('updatedTime').textContent = 'Updated ' + new Date(latest.date).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+
+    renderCoins();
+    renderBars();
+    calculate();
+
+  } catch(e) {
+    document.getElementById('spotDisplay').textContent = 'Unavailable';
+    document.getElementById('updatedTime').textContent = 'Check connection';
+  }
+}
+
+// ── BUILD KARAT GRID ──
+function buildKaratGrid() {
+  const grid = document.getElementById('karatGrid');
+  grid.innerHTML = KARATS.map((k, i) => `
+    <div class="karat-card" id="karat-${i}" onclick="selectKarat(${i})">
+      <div class="karat-name">${k.k}</div>
+      <div class="karat-purity">${k.label}</div>
+    </div>
+  `).join('');
+}
+
+function selectKarat(i) {
+  selectedKarat = i;
+  document.querySelectorAll('.karat-card').forEach((el, j) => {
+    el.classList.toggle('selected', j === i);
+  });
+  calculate();
+}
+
+// ── CALCULATE JEWELRY ──
+function calculate() {
+  if (!spotPrice || selectedKarat === null) return;
+  const weight = parseFloat(document.getElementById('weightInput').value);
+  if (!weight || weight <= 0) return;
+
+  const oz      = toTroyOz(weight, weightUnit);
+  const purity  = KARATS[selectedKarat].purity;
+  const pureOz  = oz * purity;
+  const spotVal = pureOz * spotPrice;
+  const offer   = spotVal * (buyingPct / 100);
+
+  document.getElementById('res-content').textContent = pureOz.toFixed(4) + ' troy oz pure';
+  document.getElementById('res-spot').textContent    = fmt(spotVal);
+  document.getElementById('res-offer').textContent   = fmt(offer);
+  document.getElementById('res-pct-label').textContent = buyingPct + '%';
+  document.getElementById('resultCard').classList.add('visible');
+}
+
+// ── RENDER COINS ──
+function renderCoins() {
+  if (!spotPrice) return;
+  const list = document.getElementById('coinList');
+  list.innerHTML = COINS.map(c => {
+    const spot  = c.oz * spotPrice;
+    const offer = spot * (coinPct / 100);
+    return `
+      <div class="item-card">
+        <div class="item-left">
+          <div class="item-name">${c.name}</div>
+          <div class="item-detail">${c.detail}</div>
+        </div>
+        <div class="item-right">
+          <div class="item-spot">${fmt(spot)}</div>
+          <div class="item-buy">We pay ~${fmt(offer)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── RENDER BARS ──
+function renderBars() {
+  if (!spotPrice) return;
+  const list = document.getElementById('barList');
+  list.innerHTML = BARS.map(b => {
+    const spot  = b.oz * spotPrice;
+    const offer = spot * (barPct / 100);
+    return `
+      <div class="item-card">
+        <div class="item-left">
+          <div class="item-name">${b.name}</div>
+          <div class="item-detail">${b.detail}</div>
+        </div>
+        <div class="item-right">
+          <div class="item-spot">${fmt(spot)}</div>
+          <div class="item-buy">We pay ~${fmt(offer)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── CONTROLS ──
+function updatePct(v) {
+  buyingPct = parseInt(v);
+  document.getElementById('pctDisplay').textContent = v + '%';
+  calculate();
+}
+function updateCoinPct(v) {
+  coinPct = parseInt(v);
+  document.getElementById('coinPctDisplay').textContent = v + '%';
+  renderCoins();
+}
+function updateBarPct(v) {
+  barPct = parseInt(v);
+  document.getElementById('barPctDisplay').textContent = v + '%';
+  renderBars();
+}
+
+function setUnit(u) {
+  weightUnit = u;
+  document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + u).classList.add('active');
+  calculate();
+}
+
+// ── TAB SWITCHING ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── INIT ──
+buildKaratGrid();
+fetchSpot();
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
