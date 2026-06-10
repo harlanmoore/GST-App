@@ -718,22 +718,34 @@ function fmt(n) {
 }
 
 // ── FETCH SPOT PRICE ──
+const METALS_API_KEY = 'YKTMBGFSLFEYDVTU1P5N743TU1P5N';
+
 async function fetchSpot() {
   try {
-    const res  = await fetch('https://freegoldapi.com/data/latest.json');
+    const url = `https://api.metals.dev/v1/latest?api_key=${METALS_API_KEY}&currency=USD&unit=toz`;
+    const res  = await fetch(url, { headers: { 'Accept': 'application/json' } });
     const data = await res.json();
-    const sorted = data.filter(d => d.price > 0).sort((a,b) => a.date.localeCompare(b.date));
-    const latest = sorted[sorted.length - 1];
-    const prev   = sorted[sorted.length - 2];
 
-    spotPrice = latest.price;
-    const chg = prev ? ((spotPrice - prev.price) / prev.price * 100) : 0;
-    const dir = chg >= 0 ? '▲' : '▼';
+    // metals.dev returns data.metals.gold, .silver, .platinum, .palladium
+    const metals = data.metals;
+    spotPrice = metals.gold;
 
+    // Show gold price
     document.getElementById('spotDisplay').textContent = fmt(spotPrice);
-    document.getElementById('changeDisplay').textContent = `${dir} ${Math.abs(chg).toFixed(2)}%`;
-    document.getElementById('changeDisplay').style.background = chg >= 0 ? 'rgba(22,163,74,0.3)' : 'rgba(220,38,38,0.3)';
-    document.getElementById('updatedTime').textContent = 'Updated ' + new Date(latest.date).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+
+    // Show silver in banner too if available
+    if (metals.silver) {
+      const silverEl = document.getElementById('silverDisplay');
+      if (silverEl) silverEl.textContent = fmt(metals.silver);
+    }
+
+    // metals.dev doesn't return daily change on free plan so show last updated
+    document.getElementById('changeDisplay').textContent = 'Live';
+    document.getElementById('changeDisplay').style.background = 'rgba(255,255,255,0.2)';
+    document.getElementById('updatedTime').textContent = 'Updated ' + new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+
+    // Store all metals globally for use in tabs
+    window.liveMetals = metals;
 
     renderCoins();
     renderBars();
@@ -742,6 +754,7 @@ async function fetchSpot() {
   } catch(e) {
     document.getElementById('spotDisplay').textContent = 'Unavailable';
     document.getElementById('updatedTime').textContent = 'Check connection';
+    console.error('Metals API error:', e);
   }
 }
 
