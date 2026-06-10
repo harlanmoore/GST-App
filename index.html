@@ -502,8 +502,12 @@
       <div class="price-label">Gold Spot Price / oz</div>
       <div class="price-value" id="spotDisplay">Loading…</div>
     </div>
-    <div class="price-meta">
-      <div class="price-change" id="changeDisplay">—</div>
+    <div class="price-meta" style="align-items:flex-end; gap:0.4rem;">
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.1rem;">
+        <div style="font-size:0.58rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.6);">Silver / oz</div>
+        <div style="font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:600; color:rgba(255,255,255,0.9);" id="silverDisplay">—</div>
+      </div>
+      <div class="price-change" id="changeDisplay">Live</div>
       <div class="price-updated">
         <span class="live-dot"></span>
         <span id="updatedTime">Fetching…</span>
@@ -516,6 +520,7 @@
     <button class="tab active" onclick="switchTab('jewelry', this)">💍 Jewelry</button>
     <button class="tab" onclick="switchTab('coins', this)">🪙 Coins</button>
     <button class="tab" onclick="switchTab('bullion', this)">🏅 Bullion</button>
+    <button class="tab" onclick="switchTab('silver', this)">🥈 Silver</button>
     <button class="tab" onclick="switchTab('contact', this)">📞 Contact</button>
   </div>
 
@@ -608,6 +613,59 @@
 
       <div class="item-list" id="barList">
         <div class="loading">Loading bar prices…</div>
+      </div>
+    </div>
+
+    <!-- ── SILVER PANEL ── -->
+    <div class="panel" id="panel-silver">
+      <p class="section-title">Silver Calculator</p>
+      <p class="section-sub">Enter weight and select purity to see your silver value.</p>
+
+      <!-- Percentage control -->
+      <div class="pct-card">
+        <div class="pct-row">
+          <span class="pct-label">Buying at % of spot</span>
+          <span class="pct-value" id="silverPctDisplay">80%</span>
+        </div>
+        <input type="range" id="silverPctSlider" min="40" max="95" value="80" step="1" oninput="updateSilverPct(this.value)" />
+        <div class="pct-hint">Silver typically bought at a lower % than gold</div>
+      </div>
+
+      <!-- Weight input -->
+      <div class="weight-card">
+        <div class="weight-row">
+          <div class="weight-input-wrap">
+            <input class="weight-input" type="number" id="silverWeightInput" placeholder="Enter weight" min="0" step="0.01" oninput="calculateSilver()" />
+          </div>
+          <div class="unit-toggle">
+            <button class="unit-btn active" id="sbtn-dwt" onclick="setSilverUnit('dwt')">dwt</button>
+            <button class="unit-btn" id="sbtn-g" onclick="setSilverUnit('g')">g</button>
+            <button class="unit-btn" id="sbtn-oz" onclick="setSilverUnit('oz')">oz</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purity grid -->
+      <div class="karat-grid" id="silverPurityGrid"></div>
+
+      <!-- Result -->
+      <div class="result-card" id="silverResultCard">
+        <div class="result-title">Estimated Silver Value</div>
+        <div class="result-rows">
+          <div class="result-row">
+            <span class="result-row-label">Pure silver content</span>
+            <span class="result-row-val" id="sres-content">—</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row-label">Melt / spot value</span>
+            <span class="result-row-val" id="sres-spot">—</span>
+          </div>
+          <div class="result-row">
+            <span class="result-row-label">Offer at <span id="sres-pct-label">80%</span></span>
+            <span class="result-row-val gold-val" id="sres-offer">—</span>
+          </div>
+        </div>
+        <div class="result-disclaimer">Estimate based on live spot. Final offer subject to verification. Contact us for a formal quote.</div>
       </div>
     </div>
 
@@ -733,7 +791,7 @@ async function fetchSpot() {
     // Show gold price
     document.getElementById('spotDisplay').textContent = fmt(spotPrice);
 
-    // Show silver in banner too if available
+    // Show silver in banner
     if (metals.silver) {
       const silverEl = document.getElementById('silverDisplay');
       if (silverEl) silverEl.textContent = fmt(metals.silver);
@@ -870,8 +928,80 @@ function switchTab(name, btn) {
   btn.classList.add('active');
 }
 
+// ── SILVER STATE ──
+let silverPct    = 80;
+let silverUnit   = 'dwt';
+let selectedPurity = null;
+
+// ── SILVER PURITY DATA ──
+const PURITIES = [
+  { label: 'Fine',     purity: 0.9999, detail: '99.99%' },
+  { label: 'Sterling', purity: 0.9250, detail: '92.5%'  },
+  { label: 'Coin',     purity: 0.9000, detail: '90.0%'  },
+  { label: 'Mexican',  purity: 0.9250, detail: '92.5%'  },
+  { label: '800',      purity: 0.8000, detail: '80.0%'  },
+  { label: 'Plated',   purity: 0.0000, detail: 'No value' },
+];
+
+// ── BUILD SILVER PURITY GRID ──
+function buildSilverGrid() {
+  const grid = document.getElementById('silverPurityGrid');
+  grid.innerHTML = PURITIES.map((p, i) => `
+    <div class="karat-card" id="purity-${i}" onclick="selectPurity(${i})">
+      <div class="karat-name">${p.label}</div>
+      <div class="karat-purity">${p.detail}</div>
+    </div>
+  `).join('');
+}
+
+function selectPurity(i) {
+  if (PURITIES[i].purity === 0) {
+    document.querySelectorAll('.karat-card[id^=purity]').forEach((el,j) => el.classList.toggle('selected', j===i));
+    document.getElementById('silverResultCard').classList.remove('visible');
+    selectedPurity = null;
+    return;
+  }
+  selectedPurity = i;
+  document.querySelectorAll('.karat-card[id^=purity]').forEach((el,j) => el.classList.toggle('selected', j===i));
+  calculateSilver();
+}
+
+// ── CALCULATE SILVER ──
+function calculateSilver() {
+  const silverSpot = window.liveMetals?.silver || 0;
+  if (!silverSpot || selectedPurity === null) return;
+  const weight = parseFloat(document.getElementById('silverWeightInput').value);
+  if (!weight || weight <= 0) return;
+
+  const oz      = toTroyOz(weight, silverUnit);
+  const purity  = PURITIES[selectedPurity].purity;
+  const pureOz  = oz * purity;
+  const spotVal = pureOz * silverSpot;
+  const offer   = spotVal * (silverPct / 100);
+
+  document.getElementById('sres-content').textContent = pureOz.toFixed(4) + ' troy oz pure';
+  document.getElementById('sres-spot').textContent    = fmt(spotVal);
+  document.getElementById('sres-offer').textContent   = fmt(offer);
+  document.getElementById('sres-pct-label').textContent = silverPct + '%';
+  document.getElementById('silverResultCard').classList.add('visible');
+}
+
+function updateSilverPct(v) {
+  silverPct = parseInt(v);
+  document.getElementById('silverPctDisplay').textContent = v + '%';
+  calculateSilver();
+}
+
+function setSilverUnit(u) {
+  silverUnit = u;
+  document.querySelectorAll('.unit-btn[id^=sbtn]').forEach(b => b.classList.remove('active'));
+  document.getElementById('sbtn-' + u).classList.add('active');
+  calculateSilver();
+}
+
 // ── INIT ──
 buildKaratGrid();
+buildSilverGrid();
 fetchSpot();
 
 // Register service worker
